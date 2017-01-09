@@ -1,0 +1,23 @@
+{
+  "name": "cells",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "eslint": "eslint",
+    "build": "webpack --watch"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "pixi.js": "^4.3.0",
+    "user-input": "^1.3.1",
+    "user-input-mapping": "^1.3.0",
+    "webpack": "^1.14.0"
+  },
+  "eslintConfig": ".eslintrc.json",
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "should": "^11.1.2"
+  }
+}
