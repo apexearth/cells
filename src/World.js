@@ -54,7 +54,6 @@ class World {
     }
 
     add(object) {
-        if(this.collections.all.size > 3000) return // TODO: Hard Limit
         this.collections[object.collectionName].add(object)
         this.collections.all.add(object)
     }

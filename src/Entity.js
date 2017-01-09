@@ -1,20 +1,20 @@
 if (typeof window !== 'undefined') {
     const PIXI = require('pixi.js')
 }
-const GameObject             = require('./GameObject')
+const GameObject = require('./GameObject')
 const ReproductionSpawnTypes = require('./ReproductionSpawnTypes')
-const DNA                    = require('./DNA')
-const angle                  = require('./angle')
-
+const DNA = require('./DNA')
+const angle = require('./angle')
+const config = require('./config')
 
 class Entity extends GameObject {
     constructor(options) {
         super(options)
         this.parent.entityCount++
         this.alive = true
-        this.dna   = options.dna || Entity.defaultDNA()
+        this.dna = options.dna || Entity.defaultDNA()
         this.stats = options.stats || this.defaultStats()
-        this.data  = {}
+        this.data = {}
 
         this.data.attachments = []
 
@@ -119,7 +119,7 @@ class Entity extends GameObject {
         this.momentum.y = (this.momentum.y + (Math.random() - .5) * this.movementThrust)
 
         for (let attachment of this.data.attachments) {
-            let position                 = angle.positionAngle(this.position, attachment.angle, this.scale.x + attachment.entity.scale.x)
+            let position = angle.positionAngle(this.position, attachment.angle, this.scale.x + attachment.entity.scale.x)
             attachment.entity.position.x = position.x
             attachment.entity.position.y = position.y
         }
@@ -127,7 +127,7 @@ class Entity extends GameObject {
 
     defaultStats() {
         return {
-            age : 0,
+            age: 0,
             mass: this.massMaximum
         }
     }
@@ -146,6 +146,9 @@ class Entity extends GameObject {
 
     spawn(seconds) {
         // Checks
+        if (this.parent.collections.all.size > config.entityLimit) {
+            return
+        }
         if (this.dna.spawnMinimumAge > this.age ||
             Math.random() > this.dna.spawnChance * seconds) {
             return
@@ -166,12 +169,13 @@ class Entity extends GameObject {
             parent: this.parent,
             position,
             rotation,
-            dna   : this.mutatedDNA()
+            dna: this.mutatedDNA()
         })
         this.parent.add(spawn)
         spawn.mass = .01
 
         if (this.spawnType === ReproductionSpawnTypes.Projectile) {
+            this.mass *= .8
             spawn.momentum.x += Math.random() - .5
             spawn.momentum.y += Math.random() - .5
         } else if (this.spawnType === ReproductionSpawnTypes.Attached) {
