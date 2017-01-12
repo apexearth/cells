@@ -11,10 +11,13 @@ class Entity extends GameObject {
     constructor(options) {
         super(options)
         this.parent.entityCount++
+
         this.alive = true
         this.dna = options.dna || Entity.defaultDNA()
         this.stats = options.stats || this.defaultStats()
-        this.data = {}
+        this.data = {
+            spawnedChildren: 0
+        }
 
         this.data.attachments = []
 
@@ -66,7 +69,7 @@ class Entity extends GameObject {
     }
 
     set mass(value) {
-        this.scale.x = this.scale.y = Math.sqrt(this.stats.mass = value)
+        this.scale.x = this.scale.y = Math.sqrt(Math.max(0, this.stats.mass = value) / Math.PI)
     }
 
     get massMinimum() {
@@ -89,8 +92,8 @@ class Entity extends GameObject {
     draw() {
         if (!this.graphics) return
         this.graphics.clear()
-        this.graphics.beginFill(this.color, this.alive ? .5 : .25)
-        this.graphics.lineStyle(.1, this.color, this.alive ? 1 : .5)
+        this.graphics.beginFill(this.color, this.alive ? .5 : .125)
+        this.graphics.lineStyle(.1, this.color, this.alive ? 1 : .25)
         this.graphics.drawCircle(0, 0, 1)
         this.graphics.endFill()
     }
@@ -119,9 +122,11 @@ class Entity extends GameObject {
         this.momentum.y = (this.momentum.y + (Math.random() - .5) * this.movementThrust)
 
         for (let attachment of this.data.attachments) {
+            if (!attachment.entity.alive) continue
             let position = angle.positionAngle(this.position, attachment.angle, this.scale.x + attachment.entity.scale.x)
             attachment.entity.position.x = position.x
             attachment.entity.position.y = position.y
+
         }
     }
 
@@ -149,21 +154,27 @@ class Entity extends GameObject {
         if (this.parent.collections.all.size > config.entityLimit) {
             return
         }
+        if (Math.random() > this.dna.spawnChance * seconds) {
+            return
+        }
         if (this.dna.spawnMinimumAge > this.age ||
-            Math.random() > this.dna.spawnChance * seconds) {
+            this.dna.spawnMinimumMass > this.mass ||
+            this.dna.spawnedChildrenLimit < this.data.spawnedChildren) {
             return
         }
         if (this.spawnType === ReproductionSpawnTypes.Attached &&
-            (this.data.attachments.length << 0) >= this.dna.attachmentLimit) {
+            this.data.attachments.length >= this.dna.attachmentLimit << 0) {
             return
         }
 
         // Do it
+        this.data.spawnedChildren++
         let position = this.position
-        let rotation = this.rotation + this.dna.attachmentAngle +
-            Math.random() * (this.dna.attachmentAngleVariability - this.dna.attachmentAngleVariability / 2)
+        let rotation = this.rotation
         if (this.spawnType === ReproductionSpawnTypes.Attached) {
             position = angle.positionAngle(this.position, rotation, this.radius * 2)
+            rotation += this.dna.attachmentAngle +
+                Math.random() * (this.dna.attachmentAngleVariability - this.dna.attachmentAngleVariability / 2)
         }
         const spawn = new Entity({
             parent: this.parent,
@@ -176,8 +187,8 @@ class Entity extends GameObject {
 
         if (this.spawnType === ReproductionSpawnTypes.Projectile) {
             this.mass *= .8
-            spawn.momentum.x += Math.random() - .5
-            spawn.momentum.y += Math.random() - .5
+            spawn.momentum.x += (Math.random() - .5) * this.mass / 2
+            spawn.momentum.y += (Math.random() - .5) * this.mass / 2
         } else if (this.spawnType === ReproductionSpawnTypes.Attached) {
             this.data.attachments.push({entity: spawn, angle: rotation})
         }

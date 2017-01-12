@@ -12,33 +12,35 @@ class DNA {
             this.color[1] = template.color[1]
             this.color[2] = template.color[2]
         }
-        this.spawnType          = pick(template.spawnType, ReproductionSpawnTypes.Attached)
-        this.spawnChance        = pick(template.spawnChance, .25)
-        this.spawnMinimumAge    = pick(template.spawnMinimumAge, 2)
-        this.photosynthesis     = pick(template.photosynthesis, 2)
-        this.ageMaximum         = pick(template.ageMaximum, 20)
-        this.movementThrust     = pick(template.movementThrust, 0)
+        this.spawnType = pick(template.spawnType, ReproductionSpawnTypes.Attached)
+        this.spawnChance = pick(template.spawnChance, .5)
+        this.spawnMinimumAge = pick(template.spawnMinimumAge, 0)
+        this.spawnMinimumMass = pick(template.spawnMinimumMass, 2)
+        this.spawnedChildrenLimit = pick(template.spawnedChildrenLimit, 2)
+        this.photosynthesis = pick(template.photosynthesis, 2)
+        this.ageMaximum = pick(template.ageMaximum, 200)
+        this.movementThrust = pick(template.movementThrust, 0)
         this.movementEfficiency = pick(template.movementEfficiency, 1)
-        this.massMinimum        = pick(template.massMinimum, 1)
-        this.massMaximum        = pick(template.massMaximum, 3)
-        this.massEfficiency     = pick(template.massEfficiency, 1)
+        this.massMinimum = pick(template.massMinimum, 1)
+        this.massMaximum = pick(template.massMaximum, 3)
+        this.massEfficiency = pick(template.massEfficiency, 1)
 
         if (this.spawnType === ReproductionSpawnTypes.Attached) {
-            this.attachmentLimit            = 0
-            this.attachmentAngle            = 0
+            this.attachmentLimit = 0
+            this.attachmentAngle = 0
             this.attachmentAngleVariability = 0
         }
         if (typeof this.attachmentLimit !== "undefined") this.attachmentLimit = pick(template.attachmentLimit, 1)
-        if (typeof this.attachmentAngle !== "undefined") this.attachmentAngle = pick(template.attachmentAngle, Math.PI * .5 - .25)
-        if (typeof this.attachmentAngleVariability !== "undefined") this.attachmentAngleVariability = pick(template.attachmentAngleVariability, Math.PI)
+        if (typeof this.attachmentAngle !== "undefined") this.attachmentAngle = pick(template.attachmentAngle, Math.random() * .1 - .05)
+        if (typeof this.attachmentAngleVariability !== "undefined") this.attachmentAngleVariability = pick(template.attachmentAngleVariability, Math.PI * Math.random())
     }
 
     createMutation(mutateAmount = .1) {
         const mod = () => 1 + (Math.random() - .5) * mutateAmount
 
         // copy
-        const template    = Object.assign({}, this)
-        template.color    = new Uint8Array(3)
+        const template = Object.assign({}, this)
+        template.color = new Uint8Array(3)
         template.color[0] = this.color[0]
         template.color[1] = this.color[1]
         template.color[2] = this.color[2]
@@ -47,6 +49,8 @@ class DNA {
         for (let key in template) {
             if (key === 'massEfficiency') {
                 template.massEfficiency = Math.max(.1, template.massEfficiency * mod())
+            } else if (key === 'attachmentLimit') {
+                template[key] = Math.max(1, template[key] + (Math.random() - .5) * .01)
             } else if (key === 'massMinimum') {
             } else if (key === 'massMaximum') {
             } else if (key === 'color') {
@@ -64,7 +68,7 @@ class DNA {
         template.massMaximum = Math.max(template.massMinimum * 2, template.massMaximum)
 
         if (Math.random() < .01) {
-            let types          = Object.keys(ReproductionSpawnTypes)
+            let types = Object.keys(ReproductionSpawnTypes)
             template.spawnType = ReproductionSpawnTypes[types[types.length * Math.random() << 0]]
         }
 

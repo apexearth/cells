@@ -15,44 +15,39 @@ module.exports = function renderer(root, loop) {
     }
 
 
-    const stage    = root.container
+    const stage = root.container
     let lastMouseX = input('mouseX')
     let lastMouseY = input('mouseY')
-    let last       = Date.now()
     document.addEventListener('mousewheel', mousewheelZoom)
 
     const zoomSpeed = .02
-    const zoomMin   = .1
-    const zoomMax   = 32
+    const zoomMin = .1
+    const zoomMax = 32
+    let zoomTarget = 1
 
     function mousewheelZoom(event) {
-        let amount = zoomSpeed * 10
+        let amount = zoomSpeed * 15
         if (event.deltaY > 0 && stage.scale.y > zoomMin) {
-            stage.position.x -= (stage.position.x - window.innerWidth / 2) * amount / stage.scale.x
-            stage.position.y -= (stage.position.y - window.innerHeight / 2) * amount / stage.scale.y
-            stage.scale.x = stage.scale.y = Math.max(zoomMin, stage.scale.y - amount)
+            zoomOut(amount)
         }
         if (event.deltaY < 0 && stage.scale.y < zoomMax) {
-            stage.position.x += (window.innerWidth / 2 - input('mouseX')) * amount / stage.scale.x
-            stage.position.y += (window.innerHeight / 2 - input('mouseY') ) * amount / stage.scale.y
-            stage.scale.x = stage.scale.y = Math.min(zoomMax, stage.scale.y + amount)
+            zoomIn(amount)
         }
     }
 
     function zoomOut(amount) {
-        stage.position.x -= (stage.position.x - window.innerWidth / 2) * amount / stage.scale.x
-        stage.position.y -= (stage.position.y - window.innerHeight / 2) * amount / stage.scale.y
-        stage.scale.x = stage.scale.y = Math.max(zoomMin, stage.scale.y - amount)
+        zoomTarget = Math.max(zoomMin, zoomTarget - amount)
     }
 
     function zoomIn(amount) {
-        stage.position.x += (stage.position.x - window.innerWidth / 2) * amount / stage.scale.x
-        stage.position.y += (stage.position.y - window.innerHeight / 2) * amount / stage.scale.y
-        stage.scale.x = stage.scale.y = Math.min(zoomMax, stage.scale.y + amount)
+        zoomTarget = Math.min(zoomMax, zoomTarget + amount)
     }
+
+    let last = Date.now()
 
     function animate() {
         requestAnimationFrame(animate)
+        let seconds = Math.min(.1, (Date.now() - last) / 1000)
         loop(root)
         if (window.innerWidth !== renderer.view.width || window.innerHeight !== renderer.view.height) {
             renderer.resize(window.innerWidth, window.innerHeight)
@@ -83,9 +78,14 @@ module.exports = function renderer(root, loop) {
             zoomIn(zoomSpeed)
         }
 
+        let zoomChange = (zoomTarget - stage.scale.x) * seconds * 5
+        stage.position.x += (stage.position.x - window.innerWidth / 2) * zoomChange / stage.scale.x
+        stage.position.y += (stage.position.y - window.innerHeight / 2) * zoomChange / stage.scale.y
+        stage.scale.x = stage.scale.y += zoomChange
         renderer.render(stage)
         lastMouseX = input('mouseX')
         lastMouseY = input('mouseY')
+        last = Date.now()
     }
 
     animate()

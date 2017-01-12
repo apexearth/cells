@@ -22,6 +22,7 @@ class RenderedObject {
             this.position.x = options.position.x
             this.position.y = options.position.y
         }
+        this.rotation = options.rotation || 0;
     }
 
     get position() {
@@ -34,6 +35,9 @@ class RenderedObject {
 
     get rotation() {
         return this.container.rotation
+    }
+    set rotation(val) {
+        this.container.rotation = val
     }
 
     update(seconds) {
